@@ -1,31 +1,26 @@
 import cv2
-import easyocr
+import time
 import torch
 
 
+
 def input_for_update_tracks(outputs):
-    # Extract yolov10s output to input for update tracks
+    # Extract yolov10s output to input for update tracks with the vehicle class
+    vehicles_classes = [2,3,5,7]
     update = []
     for output in outputs[0]:
         boxes = output.boxes.xyxy  
         confidences = output.boxes.conf 
         label = output.boxes.cls
         for i in range(len(boxes)):
-            x1, y1, x2, y2 = map(int, boxes[i])  
-            conf = float(confidences[i])
-            cur_tuple = ([x1, y1, x2 - x1, y2 - y1], conf,int(label[i]))
-            update.append(cur_tuple)
+            if int(label[i]) in vehicles_classes:
+                x1, y1, x2, y2 = map(int, boxes[i])  
+                conf = float(confidences[i])
+                cur_tuple = ([x1, y1, x2 - x1, y2 - y1], conf,int(label[i]))
+                update.append(cur_tuple)
     return update
         
-    
 
-
-def extract_classes_bbox(outputs,classes):
-#extract bboxs that menthon on classes list 
-    for output in outputs:
-        if output['class'] not in classes:
-            outputs.remove(output)
-    return outputs
 
 
 def crop_bb(vechicel,frame):
@@ -45,14 +40,14 @@ def draw_vechicel(frame, vechicel ,plate_number):
     cv2.putText(frame, plate_number, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
     return frame
 
-def extract_plate_number(plate_img):
-
-    reader = easyocr.Reader(['en'])
+def extract_plate_number(plate_img,reader):
     result = reader.readtext(plate_img)
     if len(result) == 0:
         return None,0
-    plate_number = result[0][1]
-    confidence = result[0][2]
+    plate_number = ''.join([char for char in result[0][1] if char.isdigit()])
+    if len(plate_number) != 7: #only 7 digits
+        return None,0
+    confidence = float(result[0][2])    
     return plate_number,confidence
 
 def draw_bb(frame,outputs):
@@ -62,6 +57,23 @@ def draw_bb(frame,outputs):
     return frame
     
 
+def update_confidence_list(vechicel_id,confidence,plate_number,conf_dict): 
+    
+# Update the confidence list with the new confidence values
+    if vechicel_id  in conf_dict.keys():
+        if (conf_dict[vechicel_id])[1] > 2:
+            return conf_dict
+        else:
+            if isinstance(plate_number,str) == False:
+                return conf_dict
+           
+            if (conf_dict[vechicel_id])[0] == plate_number:
+                (conf_dict[vechicel_id])[1] += confidence
+
+    else:
+        conf_dict[vechicel_id] = [plate_number,confidence]
+    
+    return conf_dict
 
 
-
+        
