@@ -11,20 +11,20 @@ Utilizing [**YOLOv10**](https://github.com/THU-MIG/yolov10) for accurate vehicle
 ## Installation Instructions with Docker
 
 
- # Clone the repository
+Clone the repository
  ```bash
  git clone https://github.com/yourusername/cars-tracker.git
 ```
 
-# Navigate to the project directory
+Navigate to the project directory
 ```bash
  cd plate_recognizer
 ```
-# Build the Docker image
+Build the Docker image
 ```bash
  docker build -t plate_recognizer
 ```
-# Run the Docker container
+Run the Docker container
 ```bash
  docker run --rm -it -v /path/to/your/data:/data cars-tracker
  ```
