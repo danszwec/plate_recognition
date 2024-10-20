@@ -10,7 +10,7 @@ Utilizing [**YOLOv10**](https://github.com/THU-MIG/yolov10) for accurate vehicle
 
 ## Installation Instructions with Docker
 
-```bash
+
  # Clone the repository
  git clone https://github.com/yourusername/cars-tracker.git
 
