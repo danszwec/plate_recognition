@@ -18,7 +18,8 @@ detact_vechicels_model =  (YOLO('yolov10s.pt')).to(device)
 track_vechicels_model = DeepSort(max_age=30, embedder_gpu=True)
 
 #load video
-cap = cv2.VideoCapture('/home/oury/Documents/dan/projects/data/video/[appsgolem.com][00-27-00][00-28-00]_Driving_from_Ben_Gurion_Airpor.mp4')
+video_path = '/data/video/[appsgolem.com][00-27-00][00-28-00]_Driving_from_Ben_Gurion_Airpor.mp4'
+cap = cv2.VideoCapture(video_path)
 
 # Get FPS of the video
 fps = cap.get(cv2.CAP_PROP_FPS)
@@ -53,31 +54,31 @@ while True:
     for vechicel in vechicels:
         vechicel_id = int(vechicel.track_id)
 
+        # Check if the vehicle is deleted
         if vechicel.is_deleted():
             vechicel_dict.pop(vechicel_id)
 
-        if vechicel_id not in vechicel_dict and vechicel.is_confirmed():
-            cur_instatnce = Vehicle(vechicel,frame)
-            vechicel_dict[vechicel_id] = cur_instatnce
-
-        if vechicel_id in vechicel_dict:
-            vechicel_dict[vechicel_id].update(vechicel,frame)
         
+        if vechicel.is_confirmed():
+
+            #if the vehicle is new create a new instance and add it to the dict
+            if vechicel_id not in vechicel_dict :
+                cur_instatnce = Vehicle(vechicel,frame)
+                vechicel_dict[vechicel_id] = cur_instatnce
+
+            #if the vehicle is not new update the instance
+            if vechicel_id in vechicel_dict:
+                cur_instatnce = vechicel_dict[vechicel_id]
+                cur_instatnce.update(vechicel, frame)
+
         
 
     #read licence plate numberplate_img
         if vechicel_id == 1:
-            cv2.imshow("plate",plate_img)
-        plate_number,confidence = extract_plate_number(plate_img,reader)
-        conf_lst = update_confidence_list(vechicel_id,confidence,plate_number,vechicel_dict)
-        if (vechicel_dict[vechicel_id])[1] < 0.6:
-            plate_number = "Unkown"
-        else :
-            plate_number = (vechicel_dict[vechicel_id])[0]
-            # cv2.imshow(str(vechicel_id),plate_img)
-    
+            cur_instatnce.show()
     #draw on frame
-        frame = draw_vechicel(frame, vechicel ,plate_number)
+        frame =  cur_instatnce.draw_vechicel(frame)
+        
 
     # Display the resulting frame
     cv2.imshow('frame', frame)
