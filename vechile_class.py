@@ -8,8 +8,7 @@ detact_licence_plates = (YOLO('license_plate_detector.pt')).to(device)
 reader = easyocr.Reader(['en'])
 detact_licence_plates = (YOLO('license_plate_detector.pt')).to(device)
 
-def sort_list_value(lst):
-    confidence_1 = 
+
 
 class Vehicle:
     def __init__(self, vehicle,frame):
@@ -23,9 +22,8 @@ class Vehicle:
         self.vehicle_id = vehicle.track_id
         self.bounding_box = crop_bb(vehicle,frame)
         self.plate_dict = {}
-        self.plate_number = plate_number
+        self.plate_number = "unknown"
         
-sort_list_value(self.plate_dict[i][0])
     def update_bounding_box(self, vehicle,frame):
         """
         Update the bounding box of the vehicle.
@@ -35,7 +33,7 @@ sort_list_value(self.plate_dict[i][0])
         new_bounding_box = crop_bb(vehicle,frame)
         self.bounding_box = new_bounding_box
 
-    def update_plate_dict(self, bb_box):
+    def update_plate_number(self, bb_box):
         """
         Set the license plate number of the vehicle.
 
@@ -50,24 +48,15 @@ sort_list_value(self.plate_dict[i][0])
         # Convert the plate image to grayscale for better OCR results
         plate_img = convert_to_grey(plate_img,125,255)
 
+        # Read the license plate number
         plate_number,confidence = extract_plate_number(plate_img,reader)
-        
 
-        לתקן את זההההה
-        #sperete the plate number to digit and check which digit is the most confident
-        for i in range(len(plate_number)):
-            if self.plate_dict.get(i) is None:
-                self.plate_dict[i] = []
-            if len(self.plate_dict[i][0]) < 2:
-                self.plate_dict[i][0].append([plate_number[i],confidence])
-                sort_list_value(self.plate_dict[i][0])
-            if len(self.plate_dict[i]) == 2:
-                min_conf = min(self.plate_dict[i][0][1],self.plate_dict[i][1][1])
-                if min_conf < confidence:
-                    self.plate_dict[i].replace(min_conf,[plate_number[i],confidence])
+        # Update the plate dict with the new plate number
+        self.plate_dict = update_plate_dict(plate_number,confidence,self.plate_dict)
 
-                    
-              
+        # compose the plate number
+        self.plate_number = compose_plate_number(self.plate_dict)
+                
                     
     def get_info(self):
         """
@@ -81,6 +70,7 @@ sort_list_value(self.plate_dict[i][0])
             'plate_number': self.plate_number
         }
 
+    
     def __str__(self):
         """def update_plate_number(self, plate_number):
         String representation of the Vehicle object.
@@ -97,4 +87,33 @@ sort_list_value(self.plate_dict[i][0])
         :param plate_number: License plate number.
         """
         self.update_bounding_box(vehicle,frame)
-        self.update_plate_number(plate_number)
+        self.update_plate_number(self.bounding_box)
+        
+    def show(self):#show me a frame of the vehicle with the predicted plate number
+        hight, width, _ = self.bounding_box.shape
+        black_img = np.zeros((hight+30, width, 3), np.uint8)
+        
+        #put the bounding box on the black image
+        black_img[0:hight, 0:width] = self.bounding_box
+
+        #put the plate number on the black image
+        cv2.putText(black_img, self.plate_number, (0, hight+30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+
+        #show the image 
+        cv2.imshow('vehicle+plate', black_img)
+        if cv2.waitKey(30) & 0xFF == ord('r'):
+            cv2.destroyWindow('vehicle+plate')
+        
+
+
+    def draw_vechicel(self,frame):
+        x1, y1, x2, y2 = self.bounding_box
+        x1, y1, x2, y2 = map(int, (x1, y1, x2, y2))
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        cv2.putText(frame, self.plate_number, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        return frame
+
+    
+
+
+        

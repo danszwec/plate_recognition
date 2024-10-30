@@ -35,13 +35,6 @@ def crop_bb(vechicel,frame):
     
     return bb_img
 
-def draw_vechicel(frame, vechicel ,plate_number):
-    x1, y1, x2, y2 = vechicel.to_tlbr()
-    x1, y1, x2, y2 = map(int, (x1, y1, x2, y2))
-    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-    cv2.putText(frame, plate_number, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-    return frame
-
 def convert_to_grey(img,sup_thresh,value_apply):
     # Convert the plate image to grayscale
     gray_plate_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -105,4 +98,48 @@ def resize_plate(plate_img):
     return resized_image
 
 
-        
+def update_plate_dict(plate_number,confidence,plate_dict):
+    #sperete the plate number to digit and check which digit is the most confident
+        for i in range(len(plate_number)):
+            if plate_dict.get(i) is None:
+                plate_dict[i] = []
+            for j in range(len(plate_dict[i][0])):
+                #if the the digit already exist in the place accumlate the confidence
+                if plate_dict[i][0][j][0] == plate_number[i]:
+                    plate_dict[i][0][j][1] += confidence
+                    #sort the list by confidence
+                    plate_dict[i][0]=sorted(plate_dict[i][0], key=lambda x: x[1], reverse=True)
+
+                    match_found = True 
+            
+            if match_found:
+                match_found = False
+                continue
+            #if the digit is not in the plate add it to the dict
+            if len(plate_dict[i][0]) < 2:
+                plate_dict[i][0].append([plate_number[i],confidence])
+
+                #sort the list by confidence
+                plate_dict[i][0]=sorted(plate_dict[i][0], key=lambda x: x[1], reverse=True)
+
+            if len(plate_dict[i][0]) == 2:
+                #find the index of the min confidence
+                index_of_min = min(range(2), key=lambda j: plate_dict[i][0][j][1])
+
+                #if the confidence of the new plate is higher than the min confidence replace the min confidence with the new plate    
+                if plate_dict[i][0][index_of_min][1] < confidence:
+                    plate_dict[i][0].replace(plate_dict[i][0][index_of_min],[plate_number[i],confidence])
+                    
+                    #sort the list by confidence
+                    plate_dict[i]=sorted(plate_dict[i], key=lambda x: x[1], reverse=True)
+            
+        return plate_dict
+
+def compose_plate_number(plate_dict):
+    #compose the plate number
+    plate_number = ''
+    for i in range(len(plate_dict)):
+        if plate_dict.get(i) is None:
+            return None
+        plate_number += plate_dict[i][0][0][0]
+    return plate_number
