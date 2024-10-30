@@ -8,7 +8,8 @@ detact_licence_plates = (YOLO('license_plate_detector.pt')).to(device)
 reader = easyocr.Reader(['en'])
 detact_licence_plates = (YOLO('license_plate_detector.pt')).to(device)
 
-
+def sort_list_value(lst):
+    confidence_1 = 
 
 class Vehicle:
     def __init__(self, vehicle,frame):
@@ -24,7 +25,7 @@ class Vehicle:
         self.plate_dict = {}
         self.plate_number = plate_number
         
-
+sort_list_value(self.plate_dict[i][0])
     def update_bounding_box(self, vehicle,frame):
         """
         Update the bounding box of the vehicle.
@@ -54,13 +55,16 @@ class Vehicle:
 
         לתקן את זההההה
         #sperete the plate number to digit and check which digit is the most confident
-        # for i in range(len(plate_number)):
-        #     if len(self.plate_dict[i]) < 2:
-        #         self.plate_dict[i].append([plate_number[i],confidence])
-        #     if len(self.plate_dict[i]) == 2:
-        #         min_conf = min(self.plate_dict[i][0][1],self.plate_dict[i][1][1])
-        #         if min_conf < confidence:
-        #             self.plate_dict[i].replace(min_conf,[plate_number[i],confidence])
+        for i in range(len(plate_number)):
+            if self.plate_dict.get(i) is None:
+                self.plate_dict[i] = []
+            if len(self.plate_dict[i][0]) < 2:
+                self.plate_dict[i][0].append([plate_number[i],confidence])
+                sort_list_value(self.plate_dict[i][0])
+            if len(self.plate_dict[i]) == 2:
+                min_conf = min(self.plate_dict[i][0][1],self.plate_dict[i][1][1])
+                if min_conf < confidence:
+                    self.plate_dict[i].replace(min_conf,[plate_number[i],confidence])
 
                     
               
