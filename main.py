@@ -44,7 +44,7 @@ while True:
     outputs = detact_vechicels_model(frame)  # Perform inference on the frame
     
     # Step 2: Extract bounding boxes, confidences, and class ids
-    update_input = input_for_update_tracks(outputs)conf_dict
+    update_input = input_for_update_tracks(outputs)
     
     # Step 3: Update Deep SORT tracker
     vechicels  = track_vechicels_model.update_tracks(update_input, frame=frame) \

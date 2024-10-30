@@ -58,6 +58,8 @@ def extract_plate_number(plate_img,reader):
     if len(result) == 0:
         return None,0
     plate_number = [char for char in result[0][1] if char.isdigit()]
+    if len(plate_number) != 7: #only 7 digits
+        return None,0
     confidence = float(result[0][2])    
     return plate_number,confidence
 
