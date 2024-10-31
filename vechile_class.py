@@ -20,7 +20,8 @@ class Vehicle:
         :param plate_number: License plate number of the vehicle (default is None).
         """
         self.vehicle_id = vehicle.track_id
-        self.bounding_box = crop_bb(vehicle,frame)
+        self.bounding_box = vehicle.to_tlbr()
+        self.vehicle_img = crop_bb(vehicle,frame)
         self.plate_dict = {}
         self.plate_number = "unknown"
         
@@ -31,7 +32,7 @@ class Vehicle:
         :param new_bounding_box: New bounding box coordinates.
         """
         new_bounding_box = crop_bb(vehicle,frame)
-        self.bounding_box = new_bounding_box
+        self.vehicle_img = new_bounding_box
 
     def update_plate_number(self, bb_box):
         """
@@ -66,7 +67,7 @@ class Vehicle:
         """
         return {
             'vehicle_id': self.vehicle_id,
-            'bounding_box': self.bounding_box,
+            'bounding_box': self.vehicle_img,
             'plate_number': self.plate_number
         }
 
@@ -77,7 +78,7 @@ class Vehicle:
 
         :return: String containing vehicle information.
         """
-        return f"Vehicle ID: {self.vehicle_id}, Bounding Box: {self.bounding_box}, Plate Number: {self.plate_number}"
+        return f"Vehicle ID: {self.vehicle_id}, Bounding Box: {self.vehicle_img}, Plate Number: {self.plate_number}"
     
     def update(self, vehicle,frame):
         """
@@ -87,14 +88,15 @@ class Vehicle:
         :param plate_number: License plate number.
         """
         self.update_bounding_box(vehicle,frame)
-        self.update_plate_number(self.bounding_box)
+        self.bounding_box = vehicle.to_tlbr()
+        self.update_plate_number(self.vehicle_img)
         
     def show(self):#show me a frame of the vehicle with the predicted plate number
-        hight, width, _ = self.bounding_box.shape
+        hight, width, _ = self.vehicle_img.shape
         black_img = np.zeros((hight+30, width, 3), np.uint8)
         
         #put the bounding box on the black image
-        black_img[0:hight, 0:width] = self.bounding_box
+        black_img[0:hight, 0:width] = self.vehicle_img
 
         #put the plate number on the black image
         cv2.putText(black_img, self.plate_number, (0, hight+30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)

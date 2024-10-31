@@ -8,6 +8,16 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 import easyocr
 from vechile_class import Vehicle
 
+להציג רק את הטובים ביותר
+אם הפלייט לא מעל 0.8 לא להציג
+צבעים להצגה 
+
+
+
+
+
+
+
 #veribles
 vechicel_dict = {}
 
@@ -18,7 +28,7 @@ detact_vechicels_model =  (YOLO('yolov10s.pt')).to(device)
 track_vechicels_model = DeepSort(max_age=30, embedder_gpu=True)
 
 #load video
-video_path = '/data/video/[appsgolem.com][00-27-00][00-28-00]_Driving_from_Ben_Gurion_Airpor.mp4'
+video_path = 'east_jerusalem.mp4'
 cap = cv2.VideoCapture(video_path)
 
 # Get FPS of the video
@@ -74,10 +84,10 @@ while True:
         
 
     #read licence plate numberplate_img
-        if vechicel_id == 1:
-            cur_instatnce.show()
+            if vechicel_id == 1:
+                cur_instatnce.show()
     #draw on frame
-        frame =  cur_instatnce.draw_vechicel(frame)
+            frame =  cur_instatnce.draw_vechicel(frame)
         
 
     # Display the resulting frame
