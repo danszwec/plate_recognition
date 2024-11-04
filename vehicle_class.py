@@ -4,7 +4,6 @@ import easyocr
 from ultralytics import YOLO
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-detact_licence_plates = (YOLO('license_plate_detector.pt')).to(device)
 reader = easyocr.Reader(['en'])
 detact_licence_plates = (YOLO('license_plate_detector.pt')).to(device)
 
