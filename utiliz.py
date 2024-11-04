@@ -24,30 +24,33 @@ def input_for_update_tracks(outputs):
 
 
 
-def crop_bb(vechicel,frame):
+def crop_bb(bbox,frame):
     
-    if isinstance(vechicel,torch.Tensor):
-        x1, y1, x2, y2 = vechicel[0]
-    else:
-        x1, y1, x2, y2 = vechicel.to_tlbr()
+    
+    x1, y1, x2, y2 = bbox
     x1, y1, x2, y2 = map(int, (x1, y1, x2, y2))
     bb_img = frame[int(y1):int(y2), int(x1):int(x2)]
     
     return bb_img
 
 def convert_to_grey(img,sup_thresh,value_apply):
-    # Convert the plate image to grayscale
-    gray_plate_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    # Apply threshold to convert pixels above  the thresholed to white
-    _, thresholded_img = cv2.threshold(gray_plate_img, sup_thresh,value_apply, cv2.THRESH_BINARY)
-
+    
     return thresholded_img
 
-def extract_plate_number(plate_img,reader):
+def extract_plate_number(frame,bbox,reader):
+
+    plate_img = crop_bb(frame,bbox)
+
+    # Convert the plate image to grayscale
+    gray_plate_img = cv2.cvtColor(plate_img, cv2.COLOR_BGR2GRAY)
+
+    # Apply threshold to convert pixels above  the thresholed to white
+    _, thresholded_img = cv2.threshold(gray_plate_img, 64, 255, cv2.THRESH_BINARY_INV)
+
+
   
     # Read the license plate number
-    result = reader.readtext(plate_img)
+    result = reader.readtext(thresholded_img)
     if len(result) == 0:
         return None,0
     plate_number = [char for char in result[0][1] if char.isdigit()]
@@ -161,17 +164,17 @@ def valid_plate_number(vechicel):
         return True
 
 
-def pick_best_vehicles(vechicel_dict):
-    להחזיר את הטובים ביותר
-    best_vehicles = []
+# def pick_best_vehicles(vechicel_dict):
+#     להחזיר את הטובים ביותר
+#     best_vehicles = []
     
-    for key in vechicel_dict.keys():
-        if valid_plate_number(vechicel_dict[key]):
-            best_vehicles.append(vechicel_dict[key])
+#     for key in vechicel_dict.keys():
+#         if valid_plate_number(vechicel_dict[key]):
+#             best_vehicles.append(vechicel_dict[key])
 
-    if len(best_vehicles) < 4:
-        for key in vechicel_dict.keys():
-            if vechicel_dict[key].conf > 0.9:
-                best_vehicles.append(vechicel_dict[key])
+#     if len(best_vehicles) < 4:
+#         for key in vechicel_dict.keys():
+#             if vechicel_dict[key].conf > 0.9:
+#                 best_vehicles.append(vechicel_dict[key])
              
-    return best_vehicles
+#     return best_vehicles
