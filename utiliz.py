@@ -2,7 +2,9 @@ import cv2
 import time
 import torch
 from PIL import Image
+import easyocr
 import numpy as np
+reader = easyocr.Reader(['en'])
 
 
 def input_for_update_tracks(outputs):
@@ -33,11 +35,8 @@ def crop_bb(bbox,frame):
     
     return bb_img
 
-def convert_to_grey(img,sup_thresh,value_apply):
-    
-    return thresholded_img
 
-def extract_plate_number(frame,bbox,reader):
+def extract_plate_number(frame,bbox):
 
     plate_img = crop_bb(frame,bbox)
 

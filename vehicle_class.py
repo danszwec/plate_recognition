@@ -4,7 +4,6 @@ import easyocr
 from ultralytics import YOLO
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-reader = easyocr.Reader(['en'])
 detact_licence_plates = (YOLO('license_plate_detector.pt')).to(device)
 
 
@@ -19,7 +18,7 @@ class Vehicle:
         :param plate_number: License plate number of the vehicle (default is None).
         """
         self.vehicle_id = vehicle.track_id
-        self.vehicle_bounding_box = vehicle.to_tlbr()
+        self.vehicle_bounding_box = list(map(int,vehicle.to_tlbr()))
         self.plate_bbox = None
         self.plate_dict = {}
         self.plate_number = "unknown"
@@ -30,7 +29,7 @@ class Vehicle:
 
         :param new_bounding_box: New bounding box coordinates.
         """
-        self.vehicle_bounding_box= vehicle.to_tlbr()
+        self.vehicle_bounding_box= list(map(int,vehicle.to_tlbr()))
         
 
     def update_plate_number(self,frame):
@@ -41,14 +40,18 @@ class Vehicle:
         """
         bb_box = crop_bb(self.vehicle_bounding_box,frame)
         detact_plate = detact_licence_plates(bb_box)
-        self.plate_bouding_box = detact_plate[0].boxes.xyxy.to_tlbr()
+        plate_tensor = detact_plate[0].boxes.xyxy.squeeze()
+        if plate_tensor.numel() == 0:
+            self.plate_bouding_box = None
+            return
+        self.plate_bouding_box = list(map(int,plate_tensor))
         if len(self.plate_bouding_box) == 0:
             self.plate_bouding_box = None
             return
         
 
         # Read the license plate number
-        plate_number,confidence = extract_plate_number(self.bounding_box,reader)
+        plate_number,confidence = extract_plate_number(frame,self.bounding_box)
 
         # Update the plate dict with the new plate number
         self.plate_dict = update_plate_dict(plate_number,confidence,self.plate_dict)
@@ -63,10 +66,11 @@ class Vehicle:
         :param new_bounding_box: New bounding box coordinates.
         :param plate_number: License plate number.
         """
-        self.update_bounding_box(vehicle,frame)
-        self.bounding_box = vehicle.to_tlbr()
-        self.update_plate_number(frame,self.bounding_box)
+        self.update_bounding_box(vehicle)
+        self.update_plate_number(frame)
         
+
+               
                 
                     
     def get_info(self):

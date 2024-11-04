@@ -6,11 +6,7 @@ from deep_sort_realtime.deepsort_tracker import DeepSort
 from utiliz import *
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 import easyocr
-from vechile_class import Vehicle
-
-להציג רק את הטובים ביותר
-אם הפלייט לא מעל 0.8 לא להציג
-צבעים להצגה 
+from vehicle_class import Vehicle
 
 
 
@@ -19,7 +15,7 @@ from vechile_class import Vehicle
 
 
 #veribles
-vechicel_dict = {}
+vehicle_dict = {}
 
 #insert video
 # video_path = input("give the video path")
@@ -66,27 +62,29 @@ while True:
 
         # Check if the vehicle is deleted
         if vechicel.is_deleted():
-            vechicel_dict.pop(vechicel_id)
+            vehicle_dict.pop(vechicel_id)
 
         
         if vechicel.is_confirmed():
 
             #if the vehicle is new create a new instance and add it to the dict
-            if vechicel_id not in vechicel_dict :
+            if vechicel_id not in vehicle_dict :
                 cur_instatnce = Vehicle(vechicel,frame)
-                vechicel_dict[vechicel_id] = cur_instatnce
+                vehicle_dict[vechicel_id] = cur_instatnce
 
             #if the vehicle is not new update the instance
-            if vechicel_id in vechicel_dict:
-                cur_instatnce = vechicel_dict[vechicel_id]
+            if vechicel_id in vehicle_dict:
+                cur_instatnce = vehicle_dict[vechicel_id]
                 cur_instatnce.update(vechicel, frame)
 
         
 
     #read licence plate numberplate_img
-            if vechicel_id == 1:
+            if vechicel_id == 4:
                 cur_instatnce.show()
-    #draw on frame
+    
+    
+   
             frame =  cur_instatnce.draw_vechicel(frame)
         
 
