@@ -16,7 +16,7 @@ from vehicle_class import Vehicle
 
 #veribles
 vehicle_dict = {}
-
+old_lst = []
 #insert video
 # video_path = input("give the video path")
 #load model
@@ -25,6 +25,7 @@ track_vechicels_model = DeepSort(max_age=30, embedder_gpu=True)
 
 #load video
 video_path = '/workspace/data/video2.mp4'
+video_path = 'C:/Users/danha/ai_projects/plate_recognition/east_jerusalem.mp4'
 cap = cv2.VideoCapture(video_path)
 
 # Get FPS of the video
@@ -59,14 +60,15 @@ while True:
     
     elapsed_time1 = time.time() - start_time1
     # Step 4: Extract vechicels and set them
-    start_time2 = time.time() 
+    start_time2 = time.time()
+    new_lst = [] 
     for vechicel in vechicels:
+        
+        
         vechicel_id = int(vechicel.track_id)
+        new_lst.append(vechicel_id) 
 
-        # Check if the vehicle is deleted
-        if vechicel.is_deleted():
-            vehicle_dict.pop(vechicel_id)
-            continue
+  
 
         if vechicel.is_confirmed():
 
@@ -80,8 +82,8 @@ while True:
                 cur_instatnce = vehicle_dict[vechicel_id]
                 cur_instatnce.update(vechicel, frame)
             
-
-            frame =   cur_instatnce.draw_vehicle(frame)
+            if cur_instatnce.plate_conf != 0:
+                frame = cur_instatnce.draw_vehicle(frame)
         
     elapsed_time2 = time.time() - start_time2
         
@@ -91,10 +93,20 @@ while True:
     # sort_list = sort_vehicle_dict(vehicle_dict)
     # for best_veh in sort_list[:4]:
     #     frame =  best_veh.draw_vehicle(frame)
-        
+    
+    # Check if the vehicle is deleted
+ 
+
 
     # Display the resulting frame
     cv2.imshow('frame', frame)
+
+
+    del_vechicel = list(set(old_lst) - set(new_lst))
+    for del_id in del_vechicel:
+        if del_id in vehicle_dict:
+            vehicle_dict.pop(del_id)
+    old_lst = new_lst
 
     # Calculate the elapsed time
     elapsed_time = time.time() - start_time
