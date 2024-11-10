@@ -8,6 +8,15 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 from vehicle_class import Vehicle
 from time_manage import TimeManager as tm
 
+
+# צריך:
+# 1. להשתמש בפונקציות של אוהד לחשב . 
+# 2. לאמן את הקורא לוחיות
+# 3.לקצר את העדכון של הרכבים . רק רכבים שזיהנו פלייט
+
+
+
+
 #veribles
 vehicle_dict = {}
 
