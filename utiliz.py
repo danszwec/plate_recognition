@@ -179,3 +179,6 @@ def plate_exist(box,frame):
     else:
         return False
     
+def sort_vehicle_dict(vehicle_dict):
+    # Sort the vehicle dictionary by plate confidence
+    return {k: v for k, v in sorted(vehicle_dict.items(), key=lambda item: item[1].plate_conf,reverse=True)}

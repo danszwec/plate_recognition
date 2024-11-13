@@ -17,8 +17,8 @@ class Vehicle:
         :param bounding_box: Bounding box coordinates of the vehicle.
         :param plate_number: License plate number of the vehicle (default is None).
         """
-        self.vehicle_id = vehicle.track_id
-        self.vehicle_bounding_box = list(map(int,vehicle.to_tlbr()))
+        self.vehicle_id = str(vehicle[4])
+        self.vehicle_bounding_box = list(map(int,vehicle[:4]))
         self.plate_bbox = self.detact_plate_bbox(frame)
         self.plate_dict = {}
         self.plate_number = "unknown"
@@ -30,7 +30,7 @@ class Vehicle:
 
         :param new_bounding_box: New bounding box coordinates.
         """
-        self.vehicle_bounding_box= list(map(int,vehicle.to_tlbr()))
+        self.vehicle_bounding_box= list(map(int,vehicle[:4]))
         
 
     def detact_plate_bbox(self,frame):
@@ -83,8 +83,8 @@ class Vehicle:
         if self.plate_bbox is None:
             self.plate_number = "unknown"
             return
-        Vehicle_img = crop_bb(self.vehicle_bounding_box,frame)
-        plate_number,confidence = extract_plate_number(self.plate_bbox,Vehicle_img)
+        vehicle_img = crop_bb(self.vehicle_bounding_box,frame)
+        plate_number,confidence = extract_plate_number(self.plate_bbox,vehicle_img)
         if plate_number is None:
             plate_number = "unknown"
             confidence = 0

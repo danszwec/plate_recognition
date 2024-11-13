@@ -3,18 +3,18 @@ import torch
 import cv2
 from ultralytics import YOLO
 from deep_sort_realtime.deepsort_tracker import DeepSort
-from sort import *
 from utiliz import *
+from sort import *
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 from vehicle_class import Vehicle
 from time_manage import TimeManager as tm
+import numpy as np
 
 
 # צריך:
-# 1 לעבור לסורט ולא לדיפ סורט
-# 2. לאמן את הקורא לוחיות
+# 1 לראות שלא עושים כפילויות
+# 2.  לאמן את הקורא לוחיות אולי RNN
 # 3.לקצר את העדכון של הרכבים . רק רכבים שזיהנו פלייט
-# 4. אם אנחנו בטוחים בפלייט לא להתחיל לחפש
 
 
 
@@ -27,7 +27,7 @@ time_manager = tm()
 
 #load model
 detect_vehicles_model =  (YOLO('yolov8n.pt',verbose=False)).to(device)
-track_vehicles_model = DeepSort(max_age=2,nms_max_overlap=0.5, embedder_gpu=True)
+
 
 #load video
 video_path = '/workspace/data/video2.mp4'
@@ -65,44 +65,44 @@ while True:
     
     # Step 2: Extract bounding boxes, confidences, and class ids just for vehicles with plates
     time_manager.start('yolo outputs to trecker input')
-    update_input = input_for_update_deepsort(outputs,frame)
-    # update_input = input_for_update_sort(outputs,frame)
+    update_input = input_for_update_sort(outputs,frame)
     time_manager.stop('yolo outputs to trecker input')
     
     # Step 3: Update Deep SORT tracker
     time_manager.start('update tracks') 
     # vehicles  = track_vehicles_model.update(update_input) 
-    vehicles  = track_vehicles_model.update_tracks(update_input,frame=frame) 
+    vehicles  = track_vehicles_model.update(update_input) 
     time_manager.stop('update tracks')
 
     # Step 4: Extract vehicles and set them
     time_manager.start('update all the vehicles')
     for vehicle in vehicles:
         time_manager.start('update one vehicle')
-        vehicle_id = int(vehicle.track_id)
-        if vehicle.is_confirmed():
-                #if the vehicle is new create a new instance and add it to the dict
-                if vehicle_id not in vehicle_dict :
-                    cur_instatnce = Vehicle(vehicle,frame)
-                    vehicle_dict[vehicle_id] = cur_instatnce
+        vehicle_id = str(vehicle[4])
+        #if the vehicle is new create a new instance and add it to the dict
+        if vehicle_id not in vehicle_dict :
+            cur_instatnce = Vehicle(vehicle,frame)
+            vehicle_dict[vehicle_id] = cur_instatnce
 
-                #if the vehicle is not new update the instance
-                if vehicle_id in vehicle_dict:
-                    cur_instatnce = vehicle_dict[vehicle_id]
-                    cur_instatnce.update(vehicle, frame)
-                
-                if cur_instatnce.plate_conf != 0:
-                    frame = cur_instatnce.draw_vehicle(frame)
-                time_manager.stop('update one vehicle')
-                # if cur_instatnce.vehicle_id == str(7):
-                #     cur_instatnce.show(frame)
-    
-    
- 
+        #if the vehicle is not new update the instance
+        if vehicle_id in vehicle_dict:
+            cur_instatnce = vehicle_dict[vehicle_id]
+            cur_instatnce.update(vehicle, frame)
+        
+        if cur_instatnce.plate_conf != 0:
+            frame = cur_instatnce.draw_vehicle(frame)
+        time_manager.stop('update one vehicle')
+        # if cur_instatnce.vehicle_id == str(7):
+        #     cur_instatnce.show(frame)
+
+    #sort the vehicles by confidence
+    vehicle_dict = sort_vehicle_dict(vehicle_dict)
+
+    time_manager.stop('update all the vehicles')
 
     # Display the resulting frame
     cv2.imshow('frame', frame)
-    time_manager.stop('update all the vehicles')
+    
 
     # Calculate the elapsed time
     elapsed_time_acc += (time.time() - start_time)
