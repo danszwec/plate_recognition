@@ -4,7 +4,7 @@ import easyocr
 from ultralytics import YOLO
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-detact_licence_plates = (YOLO('license_plate_detector.pt',verbose=False)).to(device)
+detact_licence_plates = (YOLO('/workspace/plate_recognition/license_plate_detector.pt',verbose = False)).to(device)
 
 
 
@@ -19,7 +19,7 @@ class Vehicle:
         """
         self.vehicle_id = vehicle.track_id
         self.vehicle_bounding_box = list(map(int,vehicle.to_tlbr()))
-        self.plate_bbox = None
+        self.plate_bbox = self.detact_plate_bbox(frame)
         self.plate_dict = {}
         self.plate_number = "unknown"
         self.plate_conf = 0
@@ -86,7 +86,8 @@ class Vehicle:
         Vehicle_img = crop_bb(self.vehicle_bounding_box,frame)
         plate_number,confidence = extract_plate_number(self.plate_bbox,Vehicle_img)
         if plate_number is None:
-            return
+            plate_number = "unknown"
+            confidence = 0
         self.plate_number,self.plate_conf = self.update_plate_dict(plate_number,confidence)
      
     def update(self,vehicle,frame):
@@ -148,7 +149,8 @@ class Vehicle:
         cv2.putText(frame, text, (x1, y1 - 5), font, font_scale, (255, 255, 255), font_thickness)
 
         return frame
-
+    
+    
 
 
 

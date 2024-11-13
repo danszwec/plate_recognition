@@ -3,6 +3,7 @@ import torch
 import cv2
 from ultralytics import YOLO
 from deep_sort_realtime.deepsort_tracker import DeepSort
+from sort import *
 from utiliz import *
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 from vehicle_class import Vehicle
@@ -10,13 +11,14 @@ from time_manage import TimeManager as tm
 
 
 # צריך:
-# 1. להשתמש בפונקציות של אוהד לחשב . 
+# 1 לעבור לסורט ולא לדיפ סורט
 # 2. לאמן את הקורא לוחיות
 # 3.לקצר את העדכון של הרכבים . רק רכבים שזיהנו פלייט
+# 4. אם אנחנו בטוחים בפלייט לא להתחיל לחפש
 
 
 
-
+track_vehicles_model = Sort(max_age=3, min_hits=1, iou_threshold=0.5)
 #veribles
 vehicle_dict = {}
 
@@ -24,8 +26,8 @@ vehicle_dict = {}
 time_manager = tm()
 
 #load model
-detact_vechicels_model =  (YOLO('yolov8n.pt',verbose=False)).to(device)
-track_vechicels_model = DeepSort(max_age=30,nms_max_overlap=0.5, embedder_gpu=True)
+detect_vehicles_model =  (YOLO('yolov8n.pt',verbose=False)).to(device)
+track_vehicles_model = DeepSort(max_age=2,nms_max_overlap=0.5, embedder_gpu=True)
 
 #load video
 video_path = '/workspace/data/video2.mp4'
@@ -54,45 +56,47 @@ while True:
         print("End of video")
     start_time = time.time() 
     
-    # Step 1: vechicels Detection with YOLOv8n
+    # Step 1: vehicles Detection with YOLOv8n
     time_manager.start('yolov8n inference')
-    outputs = detact_vechicels_model(frame,verbose=False)  # Perform inference on the frame
+    outputs = detect_vehicles_model(frame,verbose=False)  # Perform inference on the frame
     time_manager.stop('yolov8n inference')
 
+
     
-    # Step 2: Extract bounding boxes, confidences, and class ids
+    # Step 2: Extract bounding boxes, confidences, and class ids just for vehicles with plates
     time_manager.start('yolo outputs to trecker input')
-    update_input = input_for_update_tracks(outputs)
+    update_input = input_for_update_deepsort(outputs,frame)
+    # update_input = input_for_update_sort(outputs,frame)
     time_manager.stop('yolo outputs to trecker input')
     
     # Step 3: Update Deep SORT tracker
     time_manager.start('update tracks') 
-    vechicels  = track_vechicels_model.update_tracks(update_input, frame=frame) 
+    # vehicles  = track_vehicles_model.update(update_input) 
+    vehicles  = track_vehicles_model.update_tracks(update_input,frame=frame) 
     time_manager.stop('update tracks')
 
-    # Step 4: Extract vechicels and set them
+    # Step 4: Extract vehicles and set them
     time_manager.start('update all the vehicles')
-    for vechicel in vechicels:
+    for vehicle in vehicles:
         time_manager.start('update one vehicle')
-        vechicel_id = int(vechicel.track_id)
-        if vechicel.is_confirmed():
+        vehicle_id = int(vehicle.track_id)
+        if vehicle.is_confirmed():
+                #if the vehicle is new create a new instance and add it to the dict
+                if vehicle_id not in vehicle_dict :
+                    cur_instatnce = Vehicle(vehicle,frame)
+                    vehicle_dict[vehicle_id] = cur_instatnce
 
-            #if the vehicle is new create a new instance and add it to the dict
-            if vechicel_id not in vehicle_dict :
-                cur_instatnce = Vehicle(vechicel,frame)
-                vehicle_dict[vechicel_id] = cur_instatnce
-
-            #if the vehicle is not new update the instance
-            if vechicel_id in vehicle_dict:
-                cur_instatnce = vehicle_dict[vechicel_id]
-                cur_instatnce.update(vechicel, frame)
-            
-            if cur_instatnce.plate_conf != 0:
-                frame = cur_instatnce.draw_vehicle(frame)
-            time_manager.stop('update one vehicle')
-            # if cur_instatnce.vehicle_id == str(7):
-            #     cur_instatnce.show(frame)
-        
+                #if the vehicle is not new update the instance
+                if vehicle_id in vehicle_dict:
+                    cur_instatnce = vehicle_dict[vehicle_id]
+                    cur_instatnce.update(vehicle, frame)
+                
+                if cur_instatnce.plate_conf != 0:
+                    frame = cur_instatnce.draw_vehicle(frame)
+                time_manager.stop('update one vehicle')
+                # if cur_instatnce.vehicle_id == str(7):
+                #     cur_instatnce.show(frame)
+    
     
  
 

@@ -5,12 +5,42 @@ from PIL import Image
 import easyocr
 import numpy as np
 import pytesseract
+from ultralytics import YOLO
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 reader = easyocr.Reader(['en'], gpu=True)
+detact_licence_plates = (YOLO('/workspace/plate_recognition/license_plate_detector.pt',verbose = False)).to(device)
+
+
+def input_for_update_sort(outputs,frame):
+    """
+    take outputs of yolov and return numpy array of detections in the format [[x1,y1,x2,y2,score],[x1,y1,x2,y2,score],...]
+    if there are no detections, return an empty numpy array np.empty((0, 5))
+    """
+    # Use set for faster lookup
+    VEHICLES_CLASSES = [2, 3, 5, 7]
+    detections = []
+    # Get references to avoid repeated attribute access
+    boxes = outputs[0].boxes
+    xyxy = boxes.xyxy
+    conf = boxes.conf
+    cls = boxes.cls
+    
+    if len(boxes) == 0:
+        return np.empty((0, 5))
+    # Process only valid indices
+    for i in range(len(boxes)):
+        if cls[i] not in VEHICLES_CLASSES:
+            continue
+        x1, y1, x2, y2 = map(int, xyxy[i])
+        detections.append([x1, y1, x2, y2, float(conf[i])])
+    return np.array(detections)
+    
 
 
 
-def input_for_update_tracks(outputs):
+
+
+def input_for_update_deepsort(outputs,frame):
     """
     Optimized function to process YOLOv8 outputs for vehicle tracking.
     
@@ -44,12 +74,14 @@ def input_for_update_tracks(outputs):
     
     # Process only valid indices
     for idx in valid_indices:
-        x1, y1, x2, y2 = map(int, xyxy[idx])
-        # Calculate width and height directly
-        w = x2 - x1
-        h = y2 - y1
-        update.append(([x1, y1, w, h], float(conf[idx]), int(cls[idx])))
-    
+        if plate_exist(xyxy[idx],frame):
+            x1, y1, x2, y2 = map(int, xyxy[idx])
+            
+            # Calculate width and height directly
+            w = x2 - x1
+            h = y2 - y1
+            update.append(([x1, y1, w, h], float(conf[idx]), int(cls[idx])))
+        
     return update
 
 
@@ -138,6 +170,12 @@ def resize_plate(plate_img):
 
     return resized_image
 
-def plate_exist(vehicle,frame):
-    box = list(map(int,vehicle.to_tlbr()))
-    vehicle
+def plate_exist(box,frame):
+    vehicle_img = crop_bb(box,frame)
+    detact_plate = detact_licence_plates(vehicle_img,verbose=False)
+    conf = detact_plate[0].boxes.conf.tolist()
+    if conf and conf[0]>0.3:
+        return True
+    else:
+        return False
+    
