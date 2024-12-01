@@ -4,7 +4,12 @@ This project implements a Cars Tracker that effectively recognizes the license p
 Utilizing [**YOLOv8**](https://github.com/autogyro/yolo-V8) for accurate vehicle detection,  [**SORT**](https://pypi.org/project/sort-tracker/) for robust tracking across frames, and [**PaddleOCR**](https://github.com/PaddlePaddle/PaddleOCR) for reading and recognizing license plate text, this project aims to enhance vehicle tracking capabilities and streamline the process of license plate recognition in various environments.
 
 
+### Ongoing Enhancements:
+1. Increasing FPS for Real-Time Performance:
+Currently, we are working on optimizing the system's performance by training and customizing YOLO to focus specifically on vehicle detection. This aims to reduce computational overhead and achieve higher frame rates (FPS) without sacrificing detection accuracy.
 
+2. Improving License Plate Recognition Accuracy:
+The project has already transitioned from EasyOCR to PaddleOCR for license plate text recognition. This change significantly improved recognition accuracy, and we continue to fine-tune and enhance this component for even better results in various real-world scenarios.
 
 
 
