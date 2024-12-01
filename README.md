@@ -34,7 +34,6 @@ Build the Docker image
 Run the Docker container
 ```bash
  docker run -it --gpus all --net=host --ipc=host -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$DISPLAY -v  plate_recognition:v1 python main.py
-
  ```
      
 **Note**: This is not the final version of the project; it is a work in progress, and future updates will further enhance its capabilities and performance.
