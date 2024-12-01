@@ -11,7 +11,7 @@ Currently, we are working on optimizing the system's performance by training and
 2. Improving License Plate Recognition Accuracy:
 The project has already transitioned from EasyOCR to PaddleOCR for license plate text recognition. This change significantly improved recognition accuracy, and we continue to fine-tune and enhance this component for even better results in various real-world scenarios.
 
-[![Watch the video](https://i.sstatic.net/Vp2cE.png)](https://youtu.be/vt5fpE0bzSY)
+[![Watch the video][![Watch the video](https://github.com/danszwec/plate_recognition/edit/master/first_10_seconds.mp4)](https://github.com/danszwec/plate_recognition/edit/master/first_10_seconds.mp4)
 
 
 *Note: The entire video was processed for detection and saving frame-by-frame, followed by applying slow motion at 50% speed. The actual code is designed to work at an average of 25 FPS.*
